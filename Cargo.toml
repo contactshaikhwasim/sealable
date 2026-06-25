@@ -2,8 +2,14 @@
 name = "sealable"
 version = "0.1.0"
 edition = "2021"
-description = "Pluggable password-to-sealed-string encryption"
+description = "Pluggable password-to-sealed-string encryption for secrets"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/contactshaikhwasim/sealable"
+homepage = "https://github.com/contactshaikhwasim/sealable"
+documentation = "https://docs.rs/sealable"
+readme = "README.md"
+keywords = ["encryption", "secrets", "password", "aead", "argon2"]
+categories = ["cryptography", "development-tools"]
 
 [dependencies]
 aes-gcm = "0.10"
