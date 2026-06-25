@@ -11,9 +11,9 @@ pub mod prelude {
 mod error;
 pub use error::Error;
 
-pub mod traits;
-pub mod crypto;
 pub mod codec;
+pub mod crypto;
+pub mod traits;
 
 use traits::{Cipher, Codec, KeyDerivation};
 use zeroize::Zeroizing;

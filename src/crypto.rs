@@ -17,7 +17,7 @@ pub struct Argon2id;
 
 impl KeyDerivation for Argon2id {
     const SALT_LEN: usize = 16; // 128-bit salt
-    const KEY_LEN: usize = 32;  // 256-bit key for AES-256
+    const KEY_LEN: usize = 32; // 256-bit key for AES-256
 
     fn generate_salt() -> Vec<u8> {
         let mut salt = vec![0u8; Self::SALT_LEN];
