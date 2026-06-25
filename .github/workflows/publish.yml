@@ -44,16 +44,14 @@ jobs:
       - name: Verify version matches tag
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          CARGO_VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
+          CARGO_VERSION=$(sed -n '/^\[package\]/,/^\[/p' Cargo.toml | grep '^version' | head -1 | cut -d'"' -f2)
           echo "Tag: $TAG_VERSION"
-          echo "Cargo.toml: $CARGO_VERSION"
+          echo "Cargo.toml (package): $CARGO_VERSION"
           if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
             echo "ERROR: Version mismatch!"
-            echo "Tag version: $TAG_VERSION"
-            echo "Cargo.toml version: $CARGO_VERSION"
             exit 1
           fi
-          echo "Versions match!"
+          echo "✓ Versions match: $TAG_VERSION"
       
       - name: Publish to crates.io
         run: cargo publish --allow-dirty
