@@ -1,0 +1,23 @@
+[package]
+name = "sealable"
+version = "0.1.0"
+edition = "2021"
+description = "Pluggable password-to-sealed-string encryption"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+aes-gcm = "0.10"
+argon2 = "0.5"
+base64 = "0.21"
+rand = "0.8"
+thiserror = "1"
+zeroize = { version = "1", features = ["derive"] }
+serde = { version = "1", optional = true }
+
+[features]
+default = ["tracing"]
+tracing = ["dep:tracing"]
+
+[dependencies.tracing]
+version = "0.1"
+optional = true
