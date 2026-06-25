@@ -3,13 +3,8 @@ name: Publish to crates.io
 on:
   push:
     tags:
-      - 'v*.*.*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to publish (e.g., 0.1.0)'
-        required: false
-        type: string
+      - 'v*.*.*'  # Triggers on version tags like v0.1.0
+  workflow_dispatch:  # Manual trigger from GitHub UI
 
 env:
   CARGO_TERM_COLOR: always
@@ -41,6 +36,9 @@ jobs:
       
       - name: Run tests
         run: cargo test --all-features
+      
+      - name: Build examples
+        run: cargo build --examples --all-features
 
   lint:
     name: Lint
@@ -60,69 +58,26 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --all-features -- -D warnings
 
-  update-version:
-    name: Update Version
-    needs: [test, lint]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Extract version from tag
-        id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version from tag: $VERSION"
-      
-      - name: Update Cargo.toml version
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          # Update version in Cargo.toml using sed
-          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
-          echo "Updated Cargo.toml:"
-          grep "^version" Cargo.toml
-      
-      - name: Commit version bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Cargo.toml
-          git diff --staged --quiet || git commit -m "chore: bump version to ${{ steps.version.outputs.version }} [skip ci]"
-      
-      - name: Push changes
-        run: |
-          git push origin HEAD:${GITHUB_REF#refs/heads/}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   publish:
     name: Publish
-    needs: update-version
+    needs: [test, lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
       
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
       
-      - name: Verify version matches
+      - name: Verify version matches tag
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          CARGO_VERSION=$(grep "^version" Cargo.toml | cut -d'"' -f2)
-          echo "Tag version: $TAG_VERSION"
-          echo "Cargo.toml version: $CARGO_VERSION"
+          CARGO_VERSION=$(cargo pkgid | cut -d'#' -f2 | cut -d: -f2)
           if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
-            echo "ERROR: Version mismatch!"
+            echo "Tag version ($TAG_VERSION) doesn't match Cargo.toml version ($CARGO_VERSION)"
             exit 1
           fi
-          echo "✅ Versions match!"
       
       - name: Publish to crates.io
         run: cargo publish
@@ -138,7 +93,7 @@ jobs:
         id: changelog
         run: |
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-          git log --pretty=format:"* %s (%h)" $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "HEAD")..HEAD >> $GITHUB_OUTPUT
+          git log --pretty=format:"* %s (%h)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       
